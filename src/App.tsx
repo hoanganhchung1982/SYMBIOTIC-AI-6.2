@@ -5,7 +5,7 @@ import {
   Loader2, BrainCircuit, XCircle, PlusCircle, CheckCircle2, 
   Sparkles, ArrowRight 
 } from 'lucide-react';
-import { Subject, ModuleTab, AIResponse } from './types';
+import { Subject, ModuleTab, AIResponse } from '../types';
 import { SUBJECT_CONFIG, TAB_CONFIG } from './constants';
 import { generateStudyContent } from './services/geminiService';
 import MermaidChart from './components/MermaidChart';
