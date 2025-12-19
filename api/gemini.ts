@@ -2,17 +2,13 @@ export const config = {
   runtime: 'edge',
 };
 
-// Khai báo để sửa lỗi "process is not defined"
-declare var process: { env: { [key: string]: string } };
-
-export default async (req: Request) => {
-  if (req.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
-
-  const apiKey = process.env.GROQ_API_KEY; // Đảm bảo tên này khớp với Vercel Settings
-
-  if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'Chưa cấu hình GROQ_API_KEY trên Vercel' }), { status: 500 });
+export default async function (req: Request) {
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
   }
+
+  // Lấy API Key từ hệ thống
+  const apiKey = process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY;
 
   try {
     const { subject, prompt } = await req.json();
@@ -23,42 +19,28 @@ export default async (req: Request) => {
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json"
       },
-    
       body: JSON.stringify({
-  "model": "llama-3.3-70b-versatile",
-  "messages": [
-    { 
-      "role": "system", 
-      "content": `Bạn là chuyên gia giáo dục. Hãy phân tích câu hỏi và trả về dữ liệu ĐÚNG ĐỊNH DẠNG JSON sau đây:
-      {
-        "speed": {
-          "answer": "đáp án ngắn gọn",
-          "similar": {
-            "question": "một câu hỏi luyện tập tương tự",
-            "options": ["đáp án A", "đáp án B", "đáp án C", "đáp án D"]
-          }
-        },
-        "socratic_hint": "gợi ý dẫn dắt",
-        "core_concept": "khái niệm cốt lõi"
-      }` 
-    },
-    { "role": "user", "content": prompt }
-  ],
-  "response_format": { "type": "json_object" }
-})
-
-    const data = await response.json();
-    
-    // Kiểm tra nếu Groq báo lỗi (hết hạn mức, key sai...)
-    if (data.error) {
-      return new Response(JSON.stringify({ error: data.error.message }), { status: 500 });
-    }
-
-    return new Response(data.choices[0].message.content, {
-      headers: { "Content-Type": "application/json" },
+        "model": "llama-3.3-70b-versatile",
+        "messages": [
+          { 
+            "role": "system", 
+            "content": "Bạn là giáo viên. Trả về JSON chính xác cấu trúc này: { \"speed\": { \"answer\": \"đáp án\", \"similar\": { \"question\": \"câu hỏi\", \"options\": [\"A\", \"B\", \"C\", \"D\"] } }, \"socratic_hint\": \"gợi ý\", \"core_concept\": \"khái niệm\" }" 
+          },
+          { "role": "user", "content": `Môn ${subject}: ${prompt}` }
+        ],
+        "response_format": { "type": "json_object" }
+      })
     });
 
-  } catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    const data = await response.json();
+    // Chú ý: Groq trả về content là một chuỗi JSON, ta cần giữ nguyên hoặc parse lại
+    const content = data.choices[0].message.content;
+    
+    return new Response(content, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+  } catch (err) {
+    return new Response(JSON.stringify({ error: 'Lỗi máy chủ' }), { status: 500 });
   }
-};
+}
