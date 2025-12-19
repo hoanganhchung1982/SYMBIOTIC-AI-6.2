@@ -23,15 +23,29 @@ export default async (req: Request) => {
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json"
       },
+    
       body: JSON.stringify({
-        "model": "llama-3.3-70b-versatile",
-        "messages": [
-          { "role": "system", "content": `Bạn là giáo viên môn ${subject}. Trả về JSON.` },
-          { "role": "user", "content": prompt }
-        ],
-        "response_format": { "type": "json_object" }
-      })
-    });
+  "model": "llama-3.3-70b-versatile",
+  "messages": [
+    { 
+      "role": "system", 
+      "content": `Bạn là chuyên gia giáo dục. Hãy phân tích câu hỏi và trả về dữ liệu ĐÚNG ĐỊNH DẠNG JSON sau đây:
+      {
+        "speed": {
+          "answer": "đáp án ngắn gọn",
+          "similar": {
+            "question": "một câu hỏi luyện tập tương tự",
+            "options": ["đáp án A", "đáp án B", "đáp án C", "đáp án D"]
+          }
+        },
+        "socratic_hint": "gợi ý dẫn dắt",
+        "core_concept": "khái niệm cốt lõi"
+      }` 
+    },
+    { "role": "user", "content": prompt }
+  ],
+  "response_format": { "type": "json_object" }
+})
 
     const data = await response.json();
     
