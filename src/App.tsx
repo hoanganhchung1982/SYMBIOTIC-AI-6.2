@@ -26,6 +26,12 @@ const App: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+const callBackend = async () => {
+  const response = await fetch('/api/hello'); // Gọi đến Backend đã cấu hình ở bước 2
+  const data = await response.json();
+  console.log(data.message); // Kết quả: "Chào bạn từ Backend!"
+};
+  
   const compressImage = (base64Str: string): Promise<string> => {
     return new Promise((resolve) => {
       const img = new Image();
