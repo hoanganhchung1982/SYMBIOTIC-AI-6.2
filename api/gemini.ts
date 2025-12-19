@@ -1,7 +1,3 @@
-export const config = {
-  runtime: 'edge',
-  regions: ['sin1'], // Chạy tại Singapore
-};
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 
 export const config = {
