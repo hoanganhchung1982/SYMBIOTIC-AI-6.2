@@ -3,7 +3,7 @@ export const config = {
 };
 
 export default async (req: Request) => {
-  const apiKey = process.env.VITE_GROQ_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
 
   if (req.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
   if (!apiKey) return new Response(JSON.stringify({ error: 'Thiếu Groq API Key' }), { status: 500 });
