@@ -17,7 +17,7 @@ export default async (req: Request) => {
 
     // Sử dụng model 'gemini-1.5-flash' - phiên bản ổn định nhất hiện tại
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
+      model: "gemini-1.5-flash-latest",
       generationConfig: {
         responseMimeType: "application/json",
         responseSchema: {
