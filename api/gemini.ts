@@ -1,23 +1,27 @@
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 
 export const config = {
-  runtime: 'edge', // Giúp hàm chạy cực nhanh trên hạ tầng toàn cầu của Vercel
+  runtime: 'edge',
 };
 
-const genAI = new GoogleGenerativeAI(process.env.VITE_GEMINI_API_KEY || "");
-
 export default async (req: Request) => {
-  // Chỉ cho phép phương thức POST
   if (req.method !== 'POST') {
-    return new Response('Method Not Allowed', { status: 405 });
+    return new Response(JSON.stringify({ error: 'Method Not Allowed' }), { status: 405 });
+  }
+
+  // 1. Kiểm tra API Key ngay lập tức
+  const apiKey = process.env.VITE_GEMINI_API_KEY;
+  if (!apiKey) {
+    return new Response(JSON.stringify({ error: 'API Key is missing in Vercel settings!' }), { status: 500 });
   }
 
   try {
     const { subject, prompt, image } = await req.json();
-
-    // Sử dụng model 'gemini-1.5-flash' - phiên bản ổn định nhất hiện tại
+    
+    // 2. Khởi tạo bên trong handler để đảm bảo có apiKey
+    const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash-latest",
+      model: "gemini-1.5-flash",
       generationConfig: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -33,7 +37,7 @@ export default async (req: Request) => {
       }
     });
 
-    const promptInstructions = `Bạn là giáo viên Socratic môn ${subject}. Đưa ra gợi ý giúp học sinh tự tư duy. Câu hỏi: ${prompt}`;
+    const promptInstructions = `Bạn là giáo viên Socratic môn ${subject}. Hãy đưa ra gợi ý thay vì lời giải. Câu hỏi: ${prompt}`;
 
     let result;
     if (image) {
@@ -46,11 +50,13 @@ export default async (req: Request) => {
       result = await model.generateContent(promptInstructions);
     }
 
-    return new Response(result.response.text(), {
+    const text = result.response.text();
+    return new Response(text, {
       headers: { "Content-Type": "application/json" },
     });
 
   } catch (error: any) {
+    console.error("Lỗi Backend:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
