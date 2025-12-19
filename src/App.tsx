@@ -208,17 +208,17 @@ const callBackend = async () => {
                     <div className="bg-indigo-50/50 p-10 rounded-[2.5rem] border-2 border-indigo-100 relative overflow-hidden group">
                       <Zap className="absolute -right-8 -bottom-8 w-40 h-40 text-indigo-500/10 group-hover:scale-110 transition-transform" />
                       <span className="text-[10px] font-black text-indigo-600 uppercase mb-4 block tracking-[0.3em]">Kết quả</span>
-                      <p className="text-3xl md:text-4xl font-black text-slate-900 leading-tight">Đáp án: {aiResponse.speed.answer}</p>
+                      <p className="text-3xl md:text-4xl font-black text-slate-900 leading-tight">Đáp án: {aiResponse?.speed?.answer || "Đang cập nhật..."}</p>
                     </div>
                     <div className="pt-8 border-t border-slate-50">
                       <h4 className="font-black text-slate-800 uppercase text-[10px] tracking-widest mb-6 flex items-center gap-3">
                         <div className="w-1 h-4 bg-indigo-600 rounded-full"></div>
                         Luyện tập tương tự
                       </h4>
-                      <p className="font-medium text-lg text-slate-700 mb-8 leading-relaxed">{aiResponse.speed.similar.question}</p>
+                      <p className="font-medium text-lg text-slate-700 mb-8 leading-relaxed">{aiResponse?.speed?.similar?.question || "Không có câu hỏi tương tự"}</p>
                       <div className="grid gap-3">
-                        {aiResponse.speed.similar.options.map((o, i) => (
-                          <button 
+                       {aiResponse?.speed?.similar?.options?.map((o, i) => (
+                       <button 
                             key={i} 
                             onClick={() => { setSelectedOption(i); setShowMcqAnswer(true); }} 
                             disabled={showMcqAnswer} 
