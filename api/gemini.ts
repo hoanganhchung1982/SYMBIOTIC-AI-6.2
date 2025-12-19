@@ -2,11 +2,17 @@ export const config = {
   runtime: 'edge',
 };
 
-export default async (req: Request) => {
-  const apiKey = process.env.GROQ_API_KEY;
+// Khai báo để sửa lỗi "process is not defined"
+declare var process: { env: { [key: string]: string } };
 
+export default async (req: Request) => {
   if (req.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
-  if (!apiKey) return new Response(JSON.stringify({ error: 'Thiếu Groq API Key' }), { status: 500 });
+
+  const apiKey = process.env.GROQ_API_KEY; // Đảm bảo tên này khớp với Vercel Settings
+
+  if (!apiKey) {
+    return new Response(JSON.stringify({ error: 'Chưa cấu hình GROQ_API_KEY trên Vercel' }), { status: 500 });
+  }
 
   try {
     const { subject, prompt } = await req.json();
@@ -18,29 +24,23 @@ export default async (req: Request) => {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        // Model Llama 3.3 70B cực mạnh và miễn phí
-        "model": "llama-3.3-70b-versatile", 
+        "model": "llama-3.3-70b-versatile",
         "messages": [
-          {
-            "role": "system", 
-            "content": `Bạn là giáo viên Socratic môn ${subject}. Chỉ đưa ra gợi ý, không cho lời giải trực tiếp.`
-          },
-          {
-            "role": "user", 
-            "content": prompt
-          }
+          { "role": "system", "content": `Bạn là giáo viên môn ${subject}. Trả về JSON.` },
+          { "role": "user", "content": prompt }
         ],
-        // Yêu cầu trả về JSON nếu bạn muốn
         "response_format": { "type": "json_object" }
       })
     });
 
     const data = await response.json();
     
-    // Groq trả về dữ liệu theo cấu trúc OpenAI
-    const aiContent = data.choices[0].message.content;
+    // Kiểm tra nếu Groq báo lỗi (hết hạn mức, key sai...)
+    if (data.error) {
+      return new Response(JSON.stringify({ error: data.error.message }), { status: 500 });
+    }
 
-    return new Response(aiContent, {
+    return new Response(data.choices[0].message.content, {
       headers: { "Content-Type": "application/json" },
     });
 
