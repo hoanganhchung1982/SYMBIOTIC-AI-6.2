@@ -1,0 +1,7 @@
+{
+  "name": "symbiotic-ai-6-2",
+  "compatibility_date": "2025-12-19",
+  "assets": {
+    "directory": "./dist" // Thay đổi thành "./build" hoặc "./.next" tùy framework
+  }
+}
