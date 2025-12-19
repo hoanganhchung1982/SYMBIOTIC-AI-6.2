@@ -13,7 +13,7 @@ export const generateStudyContent = async (
   try {
     // 2. Cấu hình Model (Sử dụng gemini-1.5-flash cho tốc độ nhanh)
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
+      model: "gemini-1.5-flash-latest",
       // Định nghĩa cấu trúc trả về để làm app Socratic
       generationConfig: {
         responseMimeType: "application/json",
