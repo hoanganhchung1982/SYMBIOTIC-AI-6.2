@@ -1,65 +1,50 @@
-import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
-
 export const config = {
   runtime: 'edge',
 };
 
 export default async (req: Request) => {
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method Not Allowed' }), { status: 405 });
-  }
+  const apiKey = process.env.VITE_GROQ_API_KEY;
 
-  // 1. Kiểm tra API Key ngay lập tức
-  const apiKey = process.env.VITE_GEMINI_API_KEY;
-  if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'API Key is missing in Vercel settings!' }), { status: 500 });
-  }
+  if (req.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
+  if (!apiKey) return new Response(JSON.stringify({ error: 'Thiếu Groq API Key' }), { status: 500 });
 
   try {
-    const { subject, prompt, image } = await req.json();
-    
-    // 2. Khởi tạo bên trong handler để đảm bảo có apiKey
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      generationConfig: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: SchemaType.OBJECT,
-          properties: {
-            socratic_hint: { type: SchemaType.STRING },
-            core_concept: { type: SchemaType.STRING },
-            step_by_step: { type: SchemaType.STRING },
-            mermaid_diagram: { type: SchemaType.STRING }
+    const { subject, prompt } = await req.json();
+
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        // Model Llama 3.3 70B cực mạnh và miễn phí
+        "model": "llama-3.3-70b-versatile", 
+        "messages": [
+          {
+            "role": "system", 
+            "content": `Bạn là giáo viên Socratic môn ${subject}. Chỉ đưa ra gợi ý, không cho lời giải trực tiếp.`
           },
-          required: ["socratic_hint", "core_concept"]
-        }
-      }
+          {
+            "role": "user", 
+            "content": prompt
+          }
+        ],
+        // Yêu cầu trả về JSON nếu bạn muốn
+        "response_format": { "type": "json_object" }
+      })
     });
 
-    const promptInstructions = `Bạn là giáo viên Socratic môn ${subject}. Hãy đưa ra gợi ý thay vì lời giải. Câu hỏi: ${prompt}`;
+    const data = await response.json();
+    
+    // Groq trả về dữ liệu theo cấu trúc OpenAI
+    const aiContent = data.choices[0].message.content;
 
-    let result;
-    if (image) {
-      const imageData = image.split(',')[1] || image;
-      result = await model.generateContent([
-        promptInstructions,
-        { inlineData: { data: imageData, mimeType: "image/jpeg" } }
-      ]);
-    } else {
-      result = await model.generateContent(promptInstructions);
-    }
-
-    const text = result.response.text();
-    return new Response(text, {
+    return new Response(aiContent, {
       headers: { "Content-Type": "application/json" },
     });
 
   } catch (error: any) {
-    console.error("Lỗi Backend:", error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 };
