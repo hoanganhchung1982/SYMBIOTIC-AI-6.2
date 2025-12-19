@@ -27,3 +27,12 @@
     "vite": "^5.3.4"
   }
 }
+
+{
+  "rewrites": [
+    {
+      "source": "/api/gemini",
+      "destination": "/functions/gemini"
+    }
+  ]
+}
