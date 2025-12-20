@@ -8,7 +8,7 @@ export default async function (req: Request) {
   }
 
   // Lấy API Key từ hệ thống
-  const apiKey = process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY || process.env.GROQ_API_KEY;
 
   try {
     const { subject, prompt } = await req.json();
